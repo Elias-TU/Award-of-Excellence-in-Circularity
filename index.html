@@ -1,4 +1,4 @@
-html = '''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
   <meta charset="UTF-8">
@@ -57,8 +57,8 @@ html = '''<!DOCTYPE html>
         <a-entity
           id="pokal-model"
           gltf-model="#pokal"
-          scale="0.18 0.18 0.18"
-          position="0 0.18 0"
+          scale="0.8 0.8 0.8"
+          position="0 1.2 0"
           animation="property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 4000; easing: linear"
         ></a-entity>
       </a-entity>
@@ -155,10 +155,4 @@ html = '''<!DOCTYPE html>
     }
   </script>
 </body>
-</html>'''
-
-import os
-os.makedirs('output', exist_ok=True)
-with open('output/index.html', 'w', encoding='utf-8') as f:
-    f.write(html)
-print('ok')
+</html>
