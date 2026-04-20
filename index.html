@@ -160,9 +160,6 @@
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
 
-  <!-- RoomEnvironment als separates Script laden -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/environments/RoomEnvironment.js"></script>
-
   <script>
     let arStarted = false;
 
@@ -191,21 +188,37 @@
       });
 
       const initAR = () => {
-        const renderer = scene.renderer;
-        const threeScene = scene.object3D;
+        try {
+          // RoomEnvironment inline – kein externes CDN, kein Konflikt mit A-Frame's THREE
+          const renderer = scene.renderer;
+          const threeScene = scene.object3D;
 
-        // Tone Mapping wie model-viewer (ACESFilmic + Exposure 1.1)
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.1;
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
+          renderer.toneMapping = THREE.ACESFilmicToneMapping;
+          renderer.toneMappingExposure = 1.1;
 
-        // RoomEnvironment für helle PBR-Reflexionen
-        const pmrem = new THREE.PMREMGenerator(renderer);
-        pmrem.compileEquirectangularShader();
-        const env = pmrem.fromScene(new THREE.RoomEnvironment()).texture;
-        threeScene.environment = env;
-        pmrem.dispose();
+          // Minimale RoomEnvironment direkt aus THREE (ist in A-Frame 1.5.0 bereits enthalten)
+          const pmrem = new THREE.PMREMGenerator(renderer);
+          pmrem.compileEquirectangularShader();
 
+          // Neutral-graue Kugel als Fallback falls RoomEnvironment fehlt
+          let envTexture;
+          if (THREE.RoomEnvironment) {
+            envTexture = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+          } else {
+            // Fallback: einfaches neutrales Env über DataTexture
+            const data = new Uint8Array([180, 180, 180, 255]);
+            const fallbackTex = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
+            fallbackTex.needsUpdate = true;
+            envTexture = pmrem.fromEquirectangular(fallbackTex).texture;
+          }
+
+          threeScene.environment = envTexture;
+          pmrem.dispose();
+        } catch(e) {
+          console.warn('EnvMap konnte nicht gesetzt werden:', e);
+        }
+
+        // MindAR immer starten – egal ob EnvMap geklappt hat oder nicht
         scene.systems['mindar-image-system'].start();
       };
 
