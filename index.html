@@ -54,11 +54,11 @@ html = '''<!DOCTYPE html>
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
         <a-entity
-          id="pokal-model"
-          gltf-model="#pokal"
-          scale="0.5 0.5 0.5"
-          position="0 0.1 0"
-          animation="property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 4000; easing: linear"
+        <a-box
+  color="red"
+  scale="0.1 0.2 0.1"
+  position="0 0.15 0"
+></a-box>
         ></a-entity>
       </a-entity>
     </a-scene>
