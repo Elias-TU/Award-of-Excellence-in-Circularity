@@ -59,6 +59,10 @@
     .scan-text { font-size:0.82rem; color:#8ecfc9; font-weight:500; }
     #ar-back-btn { position:fixed; top:1rem; left:1rem; display:none; align-items:center; gap:0.4rem; background:var(--tu-blue); border:none; border-radius:9999px; padding:0.55rem 1rem; color:#fff; font-size:0.82rem; font-weight:500; cursor:pointer; z-index:200; font-family:'Inter',sans-serif; }
     #ar-back-btn.visible { display:flex; }
+    #lock-status { position:fixed; top:1rem; right:1rem; display:none; align-items:center; gap:0.4rem; background:rgba(95,168,160,0.95); border:none; border-radius:9999px; padding:0.5rem 0.9rem; color:#fff; font-size:0.75rem; font-weight:600; z-index:200; font-family:'Inter',sans-serif; }
+    #lock-status.visible { display:flex; }
+    #reset-btn { position:fixed; bottom:2rem; right:1rem; display:none; align-items:center; gap:0.4rem; background:rgba(0,0,0,0.82); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,0.2); border-radius:9999px; padding:0.6rem 1rem; color:#fff; font-size:0.78rem; font-weight:500; z-index:200; font-family:'Inter',sans-serif; cursor:pointer; }
+    #reset-btn.visible { display:flex; }
   </style>
 </head>
 <body>
@@ -141,11 +145,22 @@
       <a-light type="directional" color="#ffffff" intensity="1" position="-1 1 -1"></a-light>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+      <!-- Tracker entity: nur zum initialen Detecten (im Target-Hierarchie) -->
       <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
-        <a-entity id="pokal-model"
+        <a-entity id="pokal-tracker"
           gltf-model="#pokal"
           scale="5 5 5"
           position="0 0.6 0"
+          visible="false">
+        </a-entity>
+      </a-entity>
+
+      <!-- Anchor entity: hier landet das Modell, sobald gelockt (außerhalb Target-Hierarchie) -->
+      <a-entity id="pokal-anchor" visible="false">
+        <a-entity id="pokal-locked"
+          gltf-model="#pokal"
+          scale="5 5 5"
           animation="property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 11000; easing: linear">
         </a-entity>
       </a-entity>
@@ -156,8 +171,18 @@
     <svg class="scan-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8ecfc9" stroke-width="2">
       <path d="M3 9V6a3 3 0 0 1 3-3h3M15 3h3a3 3 0 0 1 3 3v3M21 15v3a3 3 0 0 1-3 3h-3M9 21H6a3 3 0 0 1-3-3v-3"/>
     </svg>
-    <span class="scan-text">Kamera auf das Podest richten</span>
+    <span class="scan-text">Kamera ruhig auf das Podest richten</span>
   </div>
+
+  <div id="lock-status">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
+    <span>Pokal verankert</span>
+  </div>
+
+  <button id="reset-btn" onclick="resetAnchor()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    Neu scannen
+  </button>
 
   <button id="ar-back-btn" onclick="stopAR()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
@@ -167,12 +192,73 @@
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <script>
     let arStarted = false;
+    let isLocked = false;
+    let stableFrames = 0;
+    let stabilityCheckInterval = null;
+    const REQUIRED_STABLE_FRAMES = 15; // ~0.5s
 
     function showScreen(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(id).classList.add('active');
     }
     function showPreview() { showScreen('screen-preview'); }
+
+    function lockPokalToWorld() {
+      const tracker = document.getElementById('pokal-tracker');
+      const anchor = document.getElementById('pokal-anchor');
+
+      // Weltposition + Rotation des Trackers auslesen
+      const worldPos = new AFRAME.THREE.Vector3();
+      const worldQuat = new AFRAME.THREE.Quaternion();
+      const worldScale = new AFRAME.THREE.Vector3();
+
+      tracker.object3D.updateMatrixWorld(true);
+      tracker.object3D.matrixWorld.decompose(worldPos, worldQuat, worldScale);
+
+      // Anchor in der Welt platzieren (außerhalb Target-Hierarchie)
+      anchor.object3D.position.copy(worldPos);
+      anchor.object3D.quaternion.copy(worldQuat);
+
+      anchor.setAttribute('visible', 'true');
+      tracker.setAttribute('visible', 'false');
+
+      isLocked = true;
+
+      document.getElementById('scan-hint').classList.remove('visible');
+      document.getElementById('lock-status').classList.add('visible');
+      document.getElementById('reset-btn').classList.add('visible');
+
+      // Tracking pausieren - Modell bleibt im Weltkoordinatensystem
+      const scene = document.getElementById('ar-scene');
+      try {
+        scene.systems['mindar-image-system'].pause(true);
+      } catch (e) {
+        console.warn('Pause failed:', e);
+      }
+
+      console.log('Pokal locked at:', worldPos);
+    }
+
+    function resetAnchor() {
+      const anchor = document.getElementById('pokal-anchor');
+      const tracker = document.getElementById('pokal-tracker');
+      const scene = document.getElementById('ar-scene');
+
+      anchor.setAttribute('visible', 'false');
+      tracker.setAttribute('visible', 'false');
+      isLocked = false;
+      stableFrames = 0;
+
+      document.getElementById('lock-status').classList.remove('visible');
+      document.getElementById('reset-btn').classList.remove('visible');
+      document.getElementById('scan-hint').classList.add('visible');
+
+      try {
+        scene.systems['mindar-image-system'].unpause();
+      } catch (e) {
+        console.warn('Unpause failed:', e);
+      }
+    }
 
     function startAR() {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -184,16 +270,43 @@
 
       const scene = document.getElementById('ar-scene');
       const target = document.getElementById('target-entity');
+      const tracker = document.getElementById('pokal-tracker');
 
       target.addEventListener('targetFound', () => {
+        if (isLocked) return;
+        tracker.setAttribute('visible', 'true');
         document.getElementById('scan-hint').classList.remove('visible');
+        stableFrames = 0;
+
+        // Stabilitätsprüfung: erst nach X stabilen Frames locken
+        if (stabilityCheckInterval) clearInterval(stabilityCheckInterval);
+        stabilityCheckInterval = setInterval(() => {
+          if (isLocked) {
+            clearInterval(stabilityCheckInterval);
+            return;
+          }
+          stableFrames++;
+          if (stableFrames >= REQUIRED_STABLE_FRAMES) {
+            clearInterval(stabilityCheckInterval);
+            stabilityCheckInterval = null;
+            lockPokalToWorld();
+          }
+        }, 33);
       });
+
       target.addEventListener('targetLost', () => {
+        if (isLocked) return;
+        tracker.setAttribute('visible', 'false');
+        stableFrames = 0;
+        if (stabilityCheckInterval) {
+          clearInterval(stabilityCheckInterval);
+          stabilityCheckInterval = null;
+        }
         document.getElementById('scan-hint').classList.add('visible');
       });
 
       const startTracking = () => {
-        // Environment map für bessere PBR-Reflexionen (wichtig für Metall)
+        // Environment map für PBR-Reflexionen (Metall-Materialien)
         try {
           const renderer = scene.renderer;
           const THREE = AFRAME.THREE;
