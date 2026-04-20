@@ -30,4 +30,157 @@
     .landing-title { font-family:'Source Serif 4',Georgia,serif; font-size:clamp(1.7rem,6vw,2.4rem); font-weight:600; line-height:1.2; text-align:center; margin-bottom:0.35rem; }
     .landing-title em { color:var(--tu-blue); font-style:normal; }
     .landing-subtitle { font-size:0.8rem; color:var(--text-muted); text-align:center; }
-    .divider-line { width:48px; height:2px; background:linear-gradient(90deg,var(--tu-blue),var(--hib-teal)); bo
+    .divider-line { width:48px; height:2px; background:linear-gradient(90deg,var(--tu-blue),var(--hib-teal)); border-radius:2px; margin:1.2rem 0; }
+    .info-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.9rem 1.1rem; display:flex; gap:0.8rem; align-items:flex-start; margin-bottom:1.4rem; width:100%; max-width:320px; }
+    .info-card-icon { width:36px; height:36px; background:var(--tu-blue-light); border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .info-card-label { font-size:0.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.1em; font-weight:500; display:block; }
+    .info-card-value { font-size:0.85rem; color:var(--text); font-weight:500; margin-top:0.2rem; display:block; }
+    .btn-group { display:flex; flex-direction:column; gap:0.65rem; width:100%; max-width:320px; }
+    .btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:0.55rem; padding:0.88rem 1.6rem; background:var(--tu-blue); color:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:0.9rem; border:none; border-radius:10px; cursor:pointer; }
+    .btn-secondary { display:inline-flex; align-items:center; justify-content:center; gap:0.55rem; padding:0.83rem 1.6rem; background:var(--surface); color:var(--tu-blue); font-family:'Inter',sans-serif; font-weight:500; font-size:0.88rem; border:1.5px solid var(--tu-blue); border-radius:10px; cursor:pointer; }
+    .landing-footer { padding:0.9rem 1.4rem; display:flex; align-items:center; justify-content:center; gap:0.5rem; flex-shrink:0; }
+    .footer-dot { width:3px; height:3px; background:#ccc; border-radius:50%; }
+    .footer-text { font-size:0.68rem; color:var(--text-muted); }
+    #screen-preview { background:#0a1520; }
+    .preview-header { background:var(--tu-blue); padding:0.85rem 1.2rem; display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+    .btn-back { display:flex; align-items:center; gap:0.4rem; background:none; border:none; color:#fff; font-size:0.82rem; font-weight:500; cursor:pointer; font-family:'Inter',sans-serif; }
+    .preview-header-title { font-size:0.9rem; font-weight:600; color:#fff; }
+    #preview-viewer { width:100%; flex:1; }
+    .preview-footer { padding:1rem 1.2rem 1.6rem; background:#0d1e2e; border-top:1px solid rgba(255,255,255,0.08); text-align:center; flex-shrink:0; }
+    .preview-hint { font-size:0.78rem; color:rgba(255,255,255,0.45); margin-bottom:0.85rem; }
+    .btn-ar { display:inline-flex; align-items:center; gap:0.5rem; padding:0.8rem 2rem; background:var(--tu-blue); color:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:0.9rem; border:none; border-radius:10px; cursor:pointer; }
+    #ar-scene-wrapper { position:fixed; inset:0; z-index:10; display:none; }
+    #ar-scene-wrapper.visible { display:block; }
+    a-scene { width:100%!important; height:100%!important; }
+    #scan-hint { position:fixed; bottom:2rem; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.82); backdrop-filter:blur(12px); border:1px solid rgba(95,168,160,0.5); border-radius:14px; padding:0.85rem 1.4rem; display:none; align-items:center; gap:0.7rem; z-index:200; white-space:nowrap; }
+    #scan-hint.visible { display:flex; }
+    .scan-icon { animation:pulse 1.5s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+    .scan-text { font-size:0.82rem; color:#8ecfc9; font-weight:500; }
+    #ar-back-btn { position:fixed; top:1rem; left:1rem; display:none; align-items:center; gap:0.4rem; background:var(--tu-blue); border:none; border-radius:9999px; padding:0.55rem 1rem; color:#fff; font-size:0.82rem; font-weight:500; cursor:pointer; z-index:200; font-family:'Inter',sans-serif; }
+    #ar-back-btn.visible { display:flex; }
+  </style>
+</head>
+<body>
+
+  <div id="screen-landing" class="screen active">
+    <div class="tu-header">
+      <div class="tu-logos">
+        <img class="tu-logo-img" src="./TUSignet-2.jpg" alt="TU Wien">
+        <div class="logo-divider"></div>
+        <img class="hib-logo-img" src="./B-U_hib_Briefpapier_h-197mm_300ppi_RGB.jpg" alt="Bau &amp; Umwelt HIB">
+      </div>
+      <span class="tu-year">2025</span>
+    </div>
+    <div class="landing-body">
+      <div class="award-badge"><div class="award-badge-star">🏆</div></div>
+      <p class="overline">Award of Excellence</p>
+      <h1 class="landing-title">Excellence in<br><em>Circularity</em></h1>
+      <p class="landing-subtitle">Institut für Hoch- und Industriebau · TU Wien</p>
+      <div class="divider-line"></div>
+      <div class="info-card">
+        <div class="info-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#006699" stroke-width="2">ircle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+        </div>
+        <div>
+          <span class="info-card-label">Augmented Reality</span>
+          <span class="info-card-value">Richte die Kamera auf das Podest – der Pokal erscheint automatisch darüber</span>
+        </div>
+      </div>
+      <div class="btn-group">
+        <button class="btn-primary" onclick="showPreview()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          3D Modell ansehen
+        </button>
+        <button class="btn-secondary" onclick="startAR()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>ircle cx="12" cy="13" r="4"/></svg>
+          Direkt zu AR
+        </button>
+      </div>
+    </div>
+    <div class="landing-footer">
+      <span class="footer-text">Kein App-Download erforderlich</span>
+      <div class="footer-dot"></div>
+      <span class="footer-text">WebAR via Browser</span>
+    </div>
+  </div>
+
+  <div id="screen-preview" class="screen">
+    <div class="preview-header">
+      <button class="btn-back" onclick="showScreen('screen-landing')">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        Zurück
+      </button>
+      <span class="preview-header-title">Award Pokal · 3D</span>
+      <div style="width:56px"></div>
+    </div>
+    <model-viewer id="preview-viewer" src="./pokal.glb" alt="Award of Excellence Pokal"
+      camera-controls auto-rotate auto-rotate-delay="500" rotation-per-second="25deg"
+      shadow-intensity="1" exposure="1.1" environment-image="neutral"></model-viewer>
+    <div class="preview-footer">
+      <p class="preview-hint">👆 Drehe und zoome das Modell frei</p>
+      <button class="btn-ar" onclick="startAR()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>ircle cx="12" cy="13" r="4"/></svg>
+        Weiter zu AR
+      </button>
+    </div>
+  </div>
+
+  <div id="ar-scene-wrapper">
+    <a-scene id="ar-scene"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.001;"
+      color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true"
+      vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      <a-assets>
+        <a-asset-item id="pokal" src="./pokal.glb"></a-asset-item>
+      </a-assets>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
+        <a-entity gltf-model="#pokal" scale="5 5 5" position="0 0.6 0"
+          animation="property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 11000; easing: linear">
+        </a-entity>
+      </a-entity>
+    </a-scene>
+  </div>
+
+  <div id="scan-hint">
+    <svg class="scan-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8ecfc9" stroke-width="2">
+      <path d="M3 9V6a3 3 0 0 1 3-3h3M15 3h3a3 3 0 0 1 3 3v3M21 15v3a3 3 0 0 1-3 3h-3M9 21H6a3 3 0 0 1-3-3v-3"/>
+    </svg>
+    <span class="scan-text">Kamera auf das Podest richten</span>
+  </div>
+
+  <button id="ar-back-btn" onclick="stopAR()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+    Beenden
+  </button>
+
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+  <script>
+    let arStarted = false;
+    function showScreen(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+    function showPreview() { showScreen('screen-preview'); }
+    function startAR() {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('ar-back-btn').classList.add('visible');
+      document.getElementById('scan-hint').classList.add('visible');
+      document.getElementById('ar-scene-wrapper').classList.add('visible');
+      if (arStarted) return;
+      arStarted = true;
+      const scene = document.getElementById('ar-scene');
+      const target = document.getElementById('target-entity');
+      target.addEventListener('targetFound', () => document.getElementById('scan-hint').classList.remove('visible'));
+      target.addEventListener('targetLost', () => document.getElementById('scan-hint').classList.add('visible'));
+      if (scene.hasLoaded) {
+        scene.systems['mindar-image-system'].start();
+      } else {
+        scene.addEventListener('loaded', () => scene.systems['mindar-image-system'].start(), { once: true });
+      }
+    }
+    function stopAR() { window.location.reload(); }
+  </script>
+</body>
+</html>
