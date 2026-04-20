@@ -128,21 +128,21 @@
 
   <div id="ar-scene-wrapper">
     <a-scene id="ar-scene"
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5; missTolerance: 99"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.01; missTolerance: 5"
+      renderer="colorManagement: true; physicallyCorrectLights: true; exposure: 1.2"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
       <a-assets>
         <a-asset-item id="pokal" src="./pokal.glb"></a-asset-item>
       </a-assets>
 
-      <a-light type="ambient" color="#ffffff" intensity="8"></a-light>
-      <a-light type="directional" color="#ffffff" intensity="6" position="1 2 1"></a-light>
-      <a-light type="directional" color="#ffffff" intensity="3" position="-1 1 -1"></a-light>
+      <a-light type="ambient" color="#ffffff" intensity="1.5"></a-light>
+      <a-light type="directional" color="#ffffff" intensity="2" position="1 2 1"></a-light>
+      <a-light type="directional" color="#ffffff" intensity="1" position="-1 1 -1"></a-light>
 
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
         <a-entity id="pokal-model"
-          visible="false"
           gltf-model="#pokal"
           scale="5 5 5"
           position="0 0.6 0"
@@ -167,7 +167,6 @@
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <script>
     let arStarted = false;
-    let anchored = false;
 
     function showScreen(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -185,25 +184,33 @@
 
       const scene = document.getElementById('ar-scene');
       const target = document.getElementById('target-entity');
-      const model = document.getElementById('pokal-model');
 
       target.addEventListener('targetFound', () => {
-        if (anchored) return;
         document.getElementById('scan-hint').classList.remove('visible');
-        model.setAttribute('visible', 'true');
-
-        setTimeout(() => {
-          if (anchored) return;
-          anchored = true;
-          scene.systems['mindar-image-system'].pause(true);
-          document.getElementById('scan-hint').classList.remove('visible');
-        }, 300);
+      });
+      target.addEventListener('targetLost', () => {
+        document.getElementById('scan-hint').classList.add('visible');
       });
 
-      if (scene.hasLoaded) {
+      const startTracking = () => {
+        // Environment map für bessere PBR-Reflexionen (wichtig für Metall)
+        try {
+          const renderer = scene.renderer;
+          const THREE = AFRAME.THREE;
+          const pmrem = new THREE.PMREMGenerator(renderer);
+          pmrem.compileEquirectangularShader();
+          const envTexture = pmrem.fromScene(new THREE.Scene(), 0.04).texture;
+          scene.object3D.environment = envTexture;
+        } catch (e) {
+          console.warn('Env map setup failed:', e);
+        }
         scene.systems['mindar-image-system'].start();
+      };
+
+      if (scene.hasLoaded) {
+        startTracking();
       } else {
-        scene.addEventListener('loaded', () => scene.systems['mindar-image-system'].start(), { once: true });
+        scene.addEventListener('loaded', startTracking, { once: true });
       }
     }
 
