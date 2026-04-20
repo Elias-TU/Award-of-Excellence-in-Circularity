@@ -128,7 +128,7 @@
 
   <div id="ar-scene-wrapper">
     <a-scene id="ar-scene"
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 1000; warmupTolerance: 5; missTolerance: 99"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; warmupTolerance: 5; missTolerance: 99"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
       <a-assets>
@@ -186,26 +186,10 @@
         document.getElementById('scan-hint').classList.add('visible');
       });
 
-      const doStart = () => {
-        // MindAR zuerst starten – das ist nie optional
-        scene.systems['mindar-image-system'].start();
-
-        // Farb-Fix danach, in try/catch – crasht es, bleibt AR trotzdem offen
-        try {
-          const renderer = scene.renderer;
-          renderer.toneMapping = THREE.ACESFilmicToneMapping;
-          renderer.toneMappingExposure = 1.1;
-          const pmrem = new THREE.PMREMGenerator(renderer);
-          const env = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-          scene.object3D.environment = env;
-          pmrem.dispose();
-        } catch(e) {}
-      };
-
       if (scene.hasLoaded) {
-        doStart();
+        scene.systems['mindar-image-system'].start();
       } else {
-        scene.addEventListener('loaded', doStart, { once: true });
+        scene.addEventListener('loaded', () => scene.systems['mindar-image-system'].start(), { once: true });
       }
     }
 
