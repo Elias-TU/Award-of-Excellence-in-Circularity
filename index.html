@@ -6,7 +6,7 @@
   <title>Award of Excellence – TU Wien</title>
   <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  //fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --tu-blue: #006699; --tu-blue-dark: #004d73; --tu-blue-light: #e8f2f8;
@@ -80,7 +80,7 @@
       <div class="divider-line"></div>
       <div class="info-card">
         <div class="info-card-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#006699" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#006699" stroke-width="2">ircle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
         </div>
         <div>
           <span class="info-card-label">Augmented Reality</span>
@@ -93,7 +93,7 @@
           3D Modell ansehen
         </button>
         <button class="btn-secondary" onclick="startAR()">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>ircle cx="12" cy="13" r="4"/></svg>
           Direkt zu AR
         </button>
       </div>
@@ -120,7 +120,7 @@
     <div class="preview-footer">
       <p class="preview-hint">👆 Drehe und zoome das Modell frei</p>
       <button class="btn-ar" onclick="startAR()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>ircle cx="12" cy="13" r="4"/></svg>
         Weiter zu AR
       </button>
     </div>
@@ -128,13 +128,17 @@
 
   <div id="ar-scene-wrapper">
     <a-scene id="ar-scene"
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.001;"
-      color-space="sRGB" renderer="colorManagement: true; physicallyCorrectLights: true"
-      vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.001; warmupTolerance: 5; missTolerance: 99"
+      color-space="sRGB"
+      renderer="colorManagement: true; physicallyCorrectLights: false; exposure: 2"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false">
       <a-assets>
         <a-asset-item id="pokal" src="./pokal.glb"></a-asset-item>
       </a-assets>
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-light type="ambient" intensity="4" color="#ffffff"></a-light>
+      <a-light type="directional" intensity="2" color="#ffffff" position="1 2 1"></a-light>
       <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
         <a-entity id="pokal-model" gltf-model="#pokal" scale="5 5 5" position="0 0.6 0"
           animation="property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 11000; easing: linear">
@@ -156,46 +160,7 @@
   </button>
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-
   <script>
-    // A-Frame Komponente: Modell folgt dem Target, bis es eingefroren wird
-    AFRAME.registerComponent('freeze-on-detect', {
-      init: function () {
-        this.frozen = false;
-        this.frozenPos = new THREE.Vector3();
-        this.frozenQuat = new THREE.Quaternion();
-
-        this.el.addEventListener('targetFound', () => {
-          document.getElementById('scan-hint').classList.remove('visible');
-          if (!this.frozen) {
-            this.frozen = true;
-            // Weltposition des Targets speichern
-            this.el.object3D.getWorldPosition(this.frozenPos);
-            this.el.object3D.getWorldQuaternion(this.frozenQuat);
-          }
-        });
-
-        this.el.addEventListener('targetLost', () => {
-          if (!this.frozen) {
-            document.getElementById('scan-hint').classList.add('visible');
-          }
-        });
-      },
-
-      tick: function () {
-        if (!this.frozen) return;
-        // Sobald eingefroren: Position manuell auf frozen-Wert setzen
-        const model = document.getElementById('pokal-model');
-        if (model) {
-          model.object3D.getWorldPosition && null;
-          this.el.object3D.position.copy(this.frozenPos);
-          this.el.object3D.quaternion.copy(this.frozenQuat);
-          // Aus dem MindAR-Target-System lösen
-          this.el.removeAttribute('mindar-image-target');
-        }
-      }
-    });
-
     let arStarted = false;
 
     function showScreen(id) {
@@ -212,11 +177,16 @@
       if (arStarted) return;
       arStarted = true;
 
-      // Freeze-Komponente auf das Target-Entity setzen
-      const target = document.getElementById('target-entity');
-      target.setAttribute('freeze-on-detect', '');
-
       const scene = document.getElementById('ar-scene');
+      const target = document.getElementById('target-entity');
+
+      target.addEventListener('targetFound', () => {
+        document.getElementById('scan-hint').classList.remove('visible');
+      });
+      target.addEventListener('targetLost', () => {
+        document.getElementById('scan-hint').classList.add('visible');
+      });
+
       if (scene.hasLoaded) {
         scene.systems['mindar-image-system'].start();
       } else {
@@ -226,6 +196,5 @@
 
     function stopAR() { window.location.reload(); }
   </script>
-
 </body>
 </html>
