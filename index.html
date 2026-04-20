@@ -1,4 +1,4 @@
-import base64
+import base64, os
 
 with open('TUSignet-2.jpg', 'rb') as f:
     tu_b64 = base64.b64encode(f.read()).decode()
@@ -31,44 +31,54 @@ html = f'''<!DOCTYPE html>
     }}
     * {{ margin: 0; padding: 0; box-sizing: border-box; }}
     body {{ background: var(--bg); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; color: var(--text); }}
+
     .screen {{ position: fixed; inset: 0; z-index: 100; display: none; flex-direction: column; }}
     .screen.active {{ display: flex; }}
 
-    /* LANDING */
+    /* ── LANDING ── */
     #screen-landing {{ background: var(--bg); align-items: stretch; justify-content: flex-start; }}
+
     .tu-header {{
-      background: var(--tu-blue); padding: 0.85rem 1.2rem;
+      background: var(--tu-blue);
+      padding: 0.85rem 1.2rem;
       display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
     }}
     .tu-logos {{ display: flex; align-items: center; gap: 0.9rem; }}
-    .tu-logo-img {{ height: 36px; width: auto; object-fit: contain; border-radius: 3px; }}
-    .hib-logo-img {{ height: 36px; width: auto; object-fit: contain; border-radius: 3px; }}
-    .logo-divider {{ width: 1px; height: 26px; background: rgba(255,255,255,0.3); flex-shrink: 0; }}
+    .tu-logo-img {{
+      height: 38px; width: auto; object-fit: contain;
+      border-radius: 4px;
+    }}
+    .logo-divider {{ width: 1px; height: 28px; background: rgba(255,255,255,0.25); }}
+    .hib-logo-img {{
+      height: 38px; width: auto; object-fit: contain;
+      border-radius: 4px;
+    }}
     .tu-year {{ font-size: 0.72rem; color: rgba(255,255,255,0.6); font-weight: 400; flex-shrink: 0; }}
 
     .landing-body {{
       flex: 1; display: flex; flex-direction: column; align-items: center;
-      justify-content: center; padding: 2rem 1.8rem; overflow: hidden;
+      justify-content: center; padding: 2rem 1.8rem; gap: 0; overflow: hidden;
     }}
     .award-badge {{
-      width: 88px; height: 88px; background: var(--tu-blue); border-radius: 50%;
+      width: 90px; height: 90px; background: var(--tu-blue); border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
-      margin-bottom: 1.5rem; position: relative;
+      margin-bottom: 1.6rem; position: relative;
       box-shadow: 0 8px 32px rgba(0,102,153,0.25);
     }}
     .award-badge::after {{
-      content: ''; position: absolute; inset: 5px;
+      content: ''; position: absolute; inset: 4px;
       border-radius: 50%; border: 1px solid rgba(255,255,255,0.2);
     }}
     .award-badge-star {{ font-size: 1.8rem; }}
-    .overline {{ font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tu-blue); font-weight: 600; margin-bottom: 0.3rem; }}
+    .label-group {{ display: flex; flex-direction: column; align-items: center; gap: 0.3rem; margin-bottom: 1rem; }}
+    .overline {{ font-size: 0.65rem; letter-spacing: 0.18em; text-transform: uppercase; color: var(--tu-blue); font-weight: 600; }}
     .landing-title {{
       font-family: 'Source Serif 4', Georgia, serif;
       font-size: clamp(1.7rem, 6vw, 2.4rem); font-weight: 600; line-height: 1.2;
-      color: var(--text); text-align: center; margin-bottom: 0.35rem;
+      color: var(--text); text-align: center;
     }}
     .landing-title em {{ color: var(--tu-blue); font-style: normal; }}
-    .landing-subtitle {{ font-size: 0.8rem; color: var(--text-muted); text-align: center; }}
+    .landing-subtitle {{ font-size: 0.82rem; color: var(--text-muted); text-align: center; margin-top: 0.4rem; }}
     .divider-line {{
       width: 48px; height: 2px;
       background: linear-gradient(90deg, var(--tu-blue), var(--hib-teal));
@@ -104,13 +114,13 @@ html = f'''<!DOCTYPE html>
     }}
     .btn-secondary:active {{ background: var(--tu-blue-light); }}
     .landing-footer {{
-      padding: 0.9rem 1.4rem; display: flex; align-items: center; justify-content: center;
-      gap: 0.5rem; flex-shrink: 0;
+      padding: 1rem 1.4rem; display: flex; align-items: center; justify-content: center;
+      gap: 0.4rem; flex-shrink: 0;
     }}
-    .footer-dot {{ width: 3px; height: 3px; background: #ccc; border-radius: 50%; }}
+    .footer-dot {{ width: 4px; height: 4px; background: var(--border); border-radius: 50%; }}
     .footer-text {{ font-size: 0.68rem; color: var(--text-muted); }}
 
-    /* 3D PREVIEW */
+    /* ── 3D PREVIEW ── */
     #screen-preview {{ background: #0a1520; }}
     .preview-header {{
       background: var(--tu-blue); padding: 0.85rem 1.2rem;
@@ -132,7 +142,7 @@ html = f'''<!DOCTYPE html>
       box-shadow: 0 4px 20px rgba(0,102,153,0.4);
     }}
 
-    /* AR */
+    /* ── AR ── */
     #ar-scene-wrapper {{ position: fixed; inset: 0; z-index: 10; display: none; }}
     #ar-scene-wrapper.visible {{ display: block; }}
     a-scene {{ width: 100% !important; height: 100% !important; }}
@@ -174,9 +184,11 @@ html = f'''<!DOCTYPE html>
       <div class="award-badge">
         <div class="award-badge-star">🏆</div>
       </div>
-      <p class="overline">Award of Excellence</p>
-      <h1 class="landing-title">Excellence in<br><em>Circularity</em></h1>
-      <p class="landing-subtitle">Institut für Hoch- und Industriebau · TU Wien</p>
+      <div class="label-group">
+        <span class="overline">Award of Excellence</span>
+        <h1 class="landing-title">Excellence in<br><em>Circularity</em></h1>
+        <p class="landing-subtitle">Institut für Hoch- und Industriebau · TU Wien</p>
+      </div>
       <div class="divider-line"></div>
       <div class="info-card">
         <div class="info-card-icon">
@@ -205,6 +217,7 @@ html = f'''<!DOCTYPE html>
         </button>
       </div>
     </div>
+
     <div class="landing-footer">
       <span class="footer-text">Kein App-Download erforderlich</span>
       <div class="footer-dot"></div>
@@ -315,7 +328,6 @@ html = f'''<!DOCTYPE html>
 </body>
 </html>'''
 
-os.makedirs('output', exist_ok=True)
 with open('output/index.html', 'w', encoding='utf-8') as f:
     f.write(html)
-print('done:', len(html), 'chars')
+print('done, size:', len(html), 'chars')
