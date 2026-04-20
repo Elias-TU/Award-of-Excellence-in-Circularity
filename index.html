@@ -127,16 +127,19 @@
   </div>
 
   <div id="ar-scene-wrapper">
+    <!-- FIX 1: filterMinCF: 0.0001; filterBeta: 0.001 → Anti-Jitter -->
     <a-scene id="ar-scene"
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; warmupTolerance: 5; missTolerance: 99"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.0001; filterBeta: 0.001; warmupTolerance: 5; missTolerance: 99"
       vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false">
+      device-orientation-permission-ui="enabled: false"
+      pbr-environment>
       <a-assets>
         <a-asset-item id="pokal" src="./pokal.glb"></a-asset-item>
       </a-assets>
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
         <a-entity id="pokal-model"
+          visible="false"
           gltf-model="#pokal"
           scale="5 5 5"
           position="0 0.6 0"
@@ -160,6 +163,24 @@
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <script>
+
+    // PBR Environment Map – setzt sich beim ersten Render-Start
+    AFRAME.registerComponent('pbr-environment', {
+      init: function () {
+        this.el.addEventListener('renderstart', () => {
+          try {
+            const renderer = this.el.renderer;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.1;
+            const pmrem = new THREE.PMREMGenerator(renderer);
+            const env = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+            this.el.object3D.environment = env;
+            pmrem.dispose();
+          } catch(e) {}
+        });
+      }
+    });
+
     let arStarted = false;
 
     function showScreen(id) {
@@ -178,12 +199,16 @@
 
       const scene = document.getElementById('ar-scene');
       const target = document.getElementById('target-entity');
+      const model = document.getElementById('pokal-model');
 
       target.addEventListener('targetFound', () => {
         document.getElementById('scan-hint').classList.remove('visible');
+        // FIX 2: Modell einblenden sobald Target gefunden
+        model.setAttribute('visible', 'true');
       });
       target.addEventListener('targetLost', () => {
         document.getElementById('scan-hint').classList.add('visible');
+        // Modell bleibt sichtbar an letzter Position → kein Verschwinden beim Hin-/Herbewegen
       });
 
       if (scene.hasLoaded) {
