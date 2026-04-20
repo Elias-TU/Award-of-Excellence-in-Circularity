@@ -130,15 +130,16 @@
     <a-scene id="ar-scene"
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 0.001; warmupTolerance: 5; missTolerance: 99"
       color-space="sRGB"
-      renderer="colorManagement: false; physicallyCorrectLights: false; toneMapping: no"
+      renderer="colorManagement: true; physicallyCorrectLights: false"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
       <a-assets>
         <a-asset-item id="pokal" src="./pokal.glb"></a-asset-item>
       </a-assets>
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-      <a-light type="ambient" intensity="8" color="#ffffff"></a-light>
-      <a-light type="directional" intensity="4" color="#ffffff" position="1 2 1"></a-light>
+      <a-light type="ambient" intensity="6" color="#ffffff"></a-light>
+      <a-light type="directional" intensity="3" color="#ffffff" position="1 2 1"></a-light>
+      <a-light type="directional" intensity="2" color="#ffffff" position="-1 1 -1"></a-light>
       <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
         <a-entity id="pokal-model" gltf-model="#pokal" scale="5 5 5" position="0 0.6 0"
           animation="property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 11000; easing: linear">
@@ -163,6 +164,56 @@
   <script>
     let arStarted = false;
 
+    // Environment Map für PBR-Materialien setzen – das ist der echte Fix für dunkle Metalle
+    AFRAME.registerComponent('env-map', {
+      init: function () {
+        const scene = this.el;
+        scene.addEventListener('loaded', () => {
+          const renderer = scene.renderer;
+          const THREE = AFRAME.THREE;
+
+          // Synthetische helle Environment Map via PMREMGenerator
+          const pmrem = new THREE.PMREMGenerator(renderer);
+          pmrem.compileEquirectangularShader();
+
+          // Einfache weiße Umgebung erzeugen
+          const envScene = new THREE.Scene();
+          envScene.background = new THREE.Color(0xffffff);
+          const envMap = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+
+          // Auf alle Materialien in der Szene anwenden
+          scene.object3D.traverse((obj) => {
+            if (obj.material) {
+              if (Array.isArray(obj.material)) {
+                obj.material.forEach(m => { m.envMap = envMap; m.envMapIntensity = 2; m.needsUpdate = true; });
+              } else {
+                obj.material.envMap = envMap;
+                obj.material.envMapIntensity = 2;
+                obj.material.needsUpdate = true;
+              }
+            }
+          });
+
+          // Auch auf später geladene GLB-Modelle anwenden
+          scene.addEventListener('model-loaded', (e) => {
+            e.detail.model.traverse((obj) => {
+              if (obj.material) {
+                if (Array.isArray(obj.material)) {
+                  obj.material.forEach(m => { m.envMap = envMap; m.envMapIntensity = 2; m.needsUpdate = true; });
+                } else {
+                  obj.material.envMap = envMap;
+                  obj.material.envMapIntensity = 2;
+                  obj.material.needsUpdate = true;
+                }
+              }
+            });
+          });
+
+          pmrem.dispose();
+        });
+      }
+    });
+
     function showScreen(id) {
       document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
       document.getElementById(id).classList.add('active');
@@ -177,9 +228,11 @@
       if (arStarted) return;
       arStarted = true;
 
+      // env-map Komponente auf die Szene setzen
       const scene = document.getElementById('ar-scene');
-      const target = document.getElementById('target-entity');
+      scene.setAttribute('env-map', '');
 
+      const target = document.getElementById('target-entity');
       target.addEventListener('targetFound', () => {
         document.getElementById('scan-hint').classList.remove('visible');
       });
