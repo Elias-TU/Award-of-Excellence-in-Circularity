@@ -159,7 +159,6 @@
   </button>
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-
   <script>
     let arStarted = false;
 
@@ -187,45 +186,26 @@
         document.getElementById('scan-hint').classList.add('visible');
       });
 
-      const initAR = () => {
-        try {
-          // RoomEnvironment inline – kein externes CDN, kein Konflikt mit A-Frame's THREE
-          const renderer = scene.renderer;
-          const threeScene = scene.object3D;
+      const doStart = () => {
+        // MindAR zuerst starten – das ist nie optional
+        scene.systems['mindar-image-system'].start();
 
+        // Farb-Fix danach, in try/catch – crasht es, bleibt AR trotzdem offen
+        try {
+          const renderer = scene.renderer;
           renderer.toneMapping = THREE.ACESFilmicToneMapping;
           renderer.toneMappingExposure = 1.1;
-
-          // Minimale RoomEnvironment direkt aus THREE (ist in A-Frame 1.5.0 bereits enthalten)
           const pmrem = new THREE.PMREMGenerator(renderer);
-          pmrem.compileEquirectangularShader();
-
-          // Neutral-graue Kugel als Fallback falls RoomEnvironment fehlt
-          let envTexture;
-          if (THREE.RoomEnvironment) {
-            envTexture = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-          } else {
-            // Fallback: einfaches neutrales Env über DataTexture
-            const data = new Uint8Array([180, 180, 180, 255]);
-            const fallbackTex = new THREE.DataTexture(data, 1, 1, THREE.RGBAFormat);
-            fallbackTex.needsUpdate = true;
-            envTexture = pmrem.fromEquirectangular(fallbackTex).texture;
-          }
-
-          threeScene.environment = envTexture;
+          const env = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+          scene.object3D.environment = env;
           pmrem.dispose();
-        } catch(e) {
-          console.warn('EnvMap konnte nicht gesetzt werden:', e);
-        }
-
-        // MindAR immer starten – egal ob EnvMap geklappt hat oder nicht
-        scene.systems['mindar-image-system'].start();
+        } catch(e) {}
       };
 
       if (scene.hasLoaded) {
-        initAR();
+        doStart();
       } else {
-        scene.addEventListener('loaded', initAR, { once: true });
+        scene.addEventListener('loaded', doStart, { once: true });
       }
     }
 
