@@ -157,30 +157,74 @@
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
   <script>
-    let arStarted = false;
-    function showScreen(id) {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-    }
-    function showPreview() { showScreen('screen-preview'); }
-    function startAR() {
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      document.getElementById('ar-back-btn').classList.add('visible');
-      document.getElementById('scan-hint').classList.add('visible');
-      document.getElementById('ar-scene-wrapper').classList.add('visible');
-      if (arStarted) return;
-      arStarted = true;
-      const scene = document.getElementById('ar-scene');
-      const target = document.getElementById('target-entity');
-      target.addEventListener('targetFound', () => document.getElementById('scan-hint').classList.remove('visible'));
-      target.addEventListener('targetLost', () => document.getElementById('scan-hint').classList.add('visible'));
-      if (scene.hasLoaded) {
-        scene.systems['mindar-image-system'].start();
-      } else {
-        scene.addEventListener('loaded', () => scene.systems['mindar-image-system'].start(), { once: true });
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+<script>
+  let arStarted = false;
+  let modelFrozen = false;
+
+  function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+  }
+  function showPreview() { showScreen('screen-preview'); }
+
+  function startAR() {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('ar-back-btn').classList.add('visible');
+    document.getElementById('scan-hint').classList.add('visible');
+    document.getElementById('ar-scene-wrapper').classList.add('visible');
+    if (arStarted) return;
+    arStarted = true;
+
+    const scene = document.getElementById('ar-scene');
+    const target = document.getElementById('target-entity');
+    const model = document.getElementById('pokal-model');
+
+    target.addEventListener('targetFound', () => {
+      document.getElementById('scan-hint').classList.remove('visible');
+
+      if (!modelFrozen) {
+        modelFrozen = true;
+
+        // Position + Rotation des Targets in Weltkoordinaten einfrieren
+        const worldPos = new THREE.Vector3();
+        const worldQuat = new THREE.Quaternion();
+        target.object3D.getWorldPosition(worldPos);
+        target.object3D.getWorldQuaternion(worldQuat);
+
+        // Modell aus Target lösen und direkt in die Szene hängen
+        const sceneEl = document.querySelector('a-scene');
+        const frozenEntity = document.createElement('a-entity');
+        frozenEntity.setAttribute('gltf-model', '#pokal');
+        frozenEntity.setAttribute('scale', '5 5 5');
+        frozenEntity.setAttribute('animation', 'property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 11000; easing: linear');
+        sceneEl.appendChild(frozenEntity);
+
+        frozenEntity.addEventListener('loaded', () => {
+          frozenEntity.object3D.position.copy(worldPos);
+          frozenEntity.object3D.position.y += 0.6;
+          frozenEntity.object3D.quaternion.copy(worldQuat);
+        });
+
+        // Originales Modell im Target unsichtbar machen
+        model.setAttribute('visible', 'false');
       }
+    });
+
+    target.addEventListener('targetLost', () => {
+      if (!modelFrozen) {
+        document.getElementById('scan-hint').classList.add('visible');
+      }
+    });
+
+    if (scene.hasLoaded) {
+      scene.systems['mindar-image-system'].start();
+    } else {
+      scene.addEventListener('loaded', () => scene.systems['mindar-image-system'].start(), { once: true });
     }
-    function stopAR() { window.location.reload(); }
-  </script>
+  }
+
+  function stopAR() { window.location.reload(); }
+</script>
 </body>
 </html>
