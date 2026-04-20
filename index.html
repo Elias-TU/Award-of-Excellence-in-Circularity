@@ -127,8 +127,9 @@
   </div>
 
   <div id="ar-scene-wrapper">
+    <!-- ✅ FIX 1: filterMinCF + filterBeta für stabiles Tracking ohne Zittern -->
     <a-scene id="ar-scene"
-      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; warmupTolerance: 5; missTolerance: 99"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 1000; warmupTolerance: 5; missTolerance: 99"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: false">
       <a-assets>
@@ -186,10 +187,20 @@
         document.getElementById('scan-hint').classList.add('visible');
       });
 
-      if (scene.hasLoaded) {
+      const initAR = () => {
+        // ✅ FIX 2: RoomEnvironment für helle PBR-Farben wie im model-viewer
+        const pmrem = new THREE.PMREMGenerator(scene.renderer);
+        const envTexture = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+        scene.object3D.environment = envTexture;
+        pmrem.dispose();
+
         scene.systems['mindar-image-system'].start();
+      };
+
+      if (scene.hasLoaded) {
+        initAR();
       } else {
-        scene.addEventListener('loaded', () => scene.systems['mindar-image-system'].start(), { once: true });
+        scene.addEventListener('loaded', initAR, { once: true });
       }
     }
 
