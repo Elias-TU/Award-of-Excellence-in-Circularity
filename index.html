@@ -127,7 +127,6 @@
   </div>
 
   <div id="ar-scene-wrapper">
-    <!-- ✅ FIX 1: filterMinCF + filterBeta für stabiles Tracking ohne Zittern -->
     <a-scene id="ar-scene"
       mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no; filterMinCF: 0.001; filterBeta: 1000; warmupTolerance: 5; missTolerance: 99"
       vr-mode-ui="enabled: false"
@@ -160,6 +159,10 @@
   </button>
 
   <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+
+  <!-- RoomEnvironment als separates Script laden -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.154.0/examples/js/environments/RoomEnvironment.js"></script>
+
   <script>
     let arStarted = false;
 
@@ -188,10 +191,19 @@
       });
 
       const initAR = () => {
-        // ✅ FIX 2: RoomEnvironment für helle PBR-Farben wie im model-viewer
-        const pmrem = new THREE.PMREMGenerator(scene.renderer);
-        const envTexture = pmrem.fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-        scene.object3D.environment = envTexture;
+        const renderer = scene.renderer;
+        const threeScene = scene.object3D;
+
+        // Tone Mapping wie model-viewer (ACESFilmic + Exposure 1.1)
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.1;
+        renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+        // RoomEnvironment für helle PBR-Reflexionen
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        pmrem.compileEquirectangularShader();
+        const env = pmrem.fromScene(new THREE.RoomEnvironment()).texture;
+        threeScene.environment = env;
         pmrem.dispose();
 
         scene.systems['mindar-image-system'].start();
