@@ -4,123 +4,92 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>Award of Excellence – AR</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></scripipt>
+  //fonts.googleapis.comom">
+  //fonts.gstatic.com" crossorigigin>
+  //fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { background: #0d0d0d; font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; overflow: hidden; }
-
-    /* ── LANDING ── */
-    #landing {
-      position: fixed; inset: 0; z-index: 100;
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 1.6rem; padding: 2rem; text-align: center;
-      background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.12) 0%, transparent 65%), #0d0d0d;
-    }
+    #ar-scene-wrapper { position: fixed; inset: 0; z-index: 10; display: none; }
+    #ar-scene-wrapper.visible { display: block; }
+    a-scene { width: 100% !important; height: 100% !important; }
+    #landing { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.6rem; padding: 2rem; text-align: center; background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.12) 0%, transparent 65%), #0d0d0d; }
     #landing.hidden { display: none; }
-
     .trophy-icon { width: 72px; height: 72px; animation: float 3s ease-in-out infinite; }
     @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-
     .eyebrow { font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; color: #c9a84c; font-weight: 500; }
-
-    .landing-title {
-      font-family: 'Playfair Display', serif;
-      font-size: clamp(2rem, 7vw, 3.2rem); font-weight: 700; line-height: 1.15;
-      background: linear-gradient(135deg, #e8c96a 0%, #c9a84c 60%, #a07830 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-    }
-
+    .landing-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 7vw, 3.2rem); font-weight: 700; line-height: 1.15; background: linear-gradient(135deg, #e8c96a 0%, #c9a84c 60%, #a07830 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
     .divider { width: 50px; height: 1px; background: linear-gradient(90deg,transparent,#c9a84c,transparent); }
     .landing-sub { font-size: 0.9rem; color: #8a8780; max-width: 30ch; line-height: 1.65; }
-
-    .start-btn {
-      display: inline-flex; align-items: center; gap: 0.6rem;
-      padding: 0.85rem 2rem;
-      background: linear-gradient(135deg, #c9a84c 0%, #a07830 100%);
-      color: #1a1200; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem;
-      border: none; border-radius: 9999px; cursor: pointer;
-      box-shadow: 0 4px 24px rgba(201,168,76,0.35);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-    .start-btn:active { transform: scale(0.97); }
-
+    .start-btn { display: inline-flex; align-items: center; gap: 0.6rem; padding: 0.85rem 2rem; background: linear-gradient(135deg, #c9a84c 0%, #a07830 100%); color: #1a1200; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 0.95rem; border: none; border-radius: 9999px; cursor: pointer; box-shadow: 0 4px 24px rgba(201,168,76,0.35); }
     .hint { font-size: 0.75rem; color: #5a5855; display:flex; align-items:center; gap:0.4rem; }
-
-    /* ── SCAN HINT ── */
-    #scan-hint {
-      position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
-      background: rgba(0,0,0,0.75); backdrop-filter: blur(10px);
-      border: 1px solid rgba(201,168,76,0.3); border-radius: 14px;
-      padding: 0.85rem 1.4rem; display: none; align-items: center; gap: 0.7rem;
-      z-index: 40; white-space: nowrap;
-    }
+    #scan-hint { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.78); backdrop-filter: blur(10px); border: 1px solid rgba(201,168,76,0.35); border-radius: 14px; padding: 0.85rem 1.4rem; display: none; align-items: center; gap: 0.7rem; z-index: 200; white-space: nowrap; }
     #scan-hint.visible { display: flex; }
     .scan-icon { animation: pulse 1.5s ease-in-out infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
     .scan-text { font-size: 0.82rem; color: #e8c96a; font-weight: 500; }
-
-    /* ── BACK BUTTON ── */
-    #back-btn {
-      position: fixed; top: 1rem; left: 1rem;
-      display: none; align-items: center; gap: 0.4rem;
-      background: rgba(0,0,0,0.7); backdrop-filter: blur(10px);
-      border: 1px solid rgba(201,168,76,0.2); border-radius: 9999px;
-      padding: 0.55rem 1rem; color: #c9a84c; font-size: 0.82rem; font-weight: 500;
-      cursor: pointer; z-index: 60; font-family: 'Inter', sans-serif;
-    }
+    #back-btn { position: fixed; top: 1rem; left: 1rem; display: none; align-items: center; gap: 0.4rem; background: rgba(0,0,0,0.7); backdrop-filter: blur(10px); border: 1px solid rgba(201,168,76,0.2); border-radius: 9999px; padding: 0.55rem 1rem; color: #c9a84c; font-size: 0.82rem; font-weight: 500; cursor: pointer; z-index: 200; font-family: 'Inter', sans-serif; }
     #back-btn.visible { display: flex; }
-
-    /* MindAR fullscreen */
-    #ar-container { position: fixed; inset: 0; z-index: 10; display: none; }
-    #ar-container.visible { display: block; }
-
-    a-scene { width: 100% !important; height: 100% !important; }
+    #debug-box { position: fixed; right: 1rem; top: 1rem; z-index: 210; background: rgba(0,0,0,0.65); color: #fff; padding: 0.6rem 0.8rem; border-radius: 10px; font-size: 0.72rem; max-width: 42vw; display:none; }
+    #debug-box.visible { display:block; }
   </style>
 </head>
 <body>
+  <div id="ar-scene-wrapper">
+    <a-scene
+      id="ar-scene"
+      mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
+      color-space="sRGB"
+      renderer="colorManagement: true; physicallyCorrectLights: true"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+      embedded
+    >
+      <a-assets>
+        <a-asset-item id="pokal" src="./pokal.glb"></a-asset-item>
+      </a-assets>
+      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      <a-entity id="target-entity" mindar-image-target="targetIndex: 0">
+        <a-entity
+          id="pokal-model"
+          gltf-model="#pokal"
+          scale="0.18 0.18 0.18"
+          position="0 0.18 0"
+          animation="property: rotation; from: 0 0 0; to: 0 360 0; loop: true; dur: 4000; easing: linear"
+        ></a-entity>
+      </a-entity>
+    </a-scene>
+  </div>
 
-  <!-- LANDING -->
   <div id="landing">
     <svg class="trophy-icon" viewBox="0 0 80 80" fill="none">
-      <path d="M40 8L49 30H73L54 43L61 65L40 52L19 65L26 43L7 30H31L40 8Z"
-            fill="#c9a84c" fill-opacity="0.12" stroke="#c9a84c" stroke-width="2" stroke-linejoin="round"/>
+      <path d="M40 8L49 30H73L54 43L61 65L40 52L19 65L26 43L7 30H31L40 8Z" fill="#c9a84c" fill-opacity="0.12" stroke="#c9a84c" stroke-width="2" stroke-linejoin="round"/>
       <rect x="33" y="65" width="14" height="5" rx="2" fill="#c9a84c" fill-opacity="0.5" stroke="#c9a84c" stroke-width="1.5"/>
       <rect x="27" y="70" width="26" height="5" rx="2.5" fill="#c9a84c" fill-opacity="0.7" stroke="#c9a84c" stroke-width="1.5"/>
     </svg>
-
     <p class="eyebrow">Augmented Reality</p>
     <h1 class="landing-title">Award of<br>Excellence</h1>
     <div class="divider"></div>
     <p class="landing-sub">Richte die Kamera auf das Podest – der Pokal erscheint automatisch darüber.</p>
-
     <button class="start-btn" onclick="startAR()">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-        <circle cx="12" cy="13" r="4"/>
+        ircle cx="12" cy="13" r="4"/>
       </svg>
       Kamera starten
     </button>
-
-    <p class="hint">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
-      </svg>
-      Kein App-Download &middot; Läuft im Browser
-    </p>
+    <p class="hint">Kein App-Download · Läuft im Browser</p>
   </div>
 
-  <!-- SCAN HINT -->
-  <div id="scan-hint">
+  <div id="scan-hint" class="visible">
     <svg class="scan-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#c9a84c" stroke-width="2">
       <path d="M3 9V6a3 3 0 0 1 3-3h3M15 3h3a3 3 0 0 1 3 3v3M21 15v3a3 3 0 0 1-3 3h-3M9 21H6a3 3 0 0 1-3-3v-3"/>
     </svg>
     <span class="scan-text">Kamera auf das Podest richten</span>
   </div>
 
-  <!-- BACK BUTTON -->
   <button id="back-btn" onclick="stopAR()">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
       <path d="M19 12H5M12 5l-7 7 7 7"/>
@@ -128,83 +97,58 @@
     Beenden
   </button>
 
-  <!-- AR CONTAINER -->
-  <div id="ar-container"></div>
+  <div id="debug-box"></div>
 
   <script>
+    let arStarted = false;
+    function debug(msg) {
+      const box = document.getElementById('debug-box');
+      box.classList.add('visible');
+      box.innerHTML = msg;
+      console.log(msg);
+    }
+
     function startAR() {
+      if (arStarted) return;
+      arStarted = true;
       document.getElementById('landing').classList.add('hidden');
       document.getElementById('back-btn').classList.add('visible');
       document.getElementById('scan-hint').classList.add('visible');
-      document.getElementById('ar-container').classList.add('visible');
+      document.getElementById('ar-scene-wrapper').classList.add('visible');
 
-      // MindAR + A-Frame Scripts dynamisch laden
-      const aframe = document.createElement('script');
-      aframe.src = 'https://aframe.io/releases/1.5.0/aframe.min.js';
-      document.head.appendChild(aframe);
+      const scene = document.getElementById('ar-scene');
+      const target = document.getElementById('target-entity');
 
-      aframe.onload = () => {
-        const mindar = document.createElement('script');
-        mindar.src = 'https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js';
-        document.head.appendChild(mindar);
+      target.addEventListener('targetFound', () => {
+        document.getElementById('scan-hint').classList.remove('visible');
+        debug('Triggerbild erkannt');
+      });
 
-        mindar.onload = () => {
-          buildScene();
-        };
-      };
-    }
+      target.addEventListener('targetLost', () => {
+        document.getElementById('scan-hint').classList.add('visible');
+        debug('Triggerbild verloren');
+      });
 
-    function buildScene() {
-      document.getElementById('ar-container').innerHTML = `
-        <a-scene
-          mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiLoading: no; uiError: no; uiScanning: no;"
-          color-space="sRGB"
-          renderer="colorManagement: true, physicallyCorrectLights: true"
-          vr-mode-ui="enabled: false"
-          device-orientation-permission-ui="enabled: false"
-        >
-          <a-assets>
-            <a-asset-item id="pokal" src="./pokal.glb"></a-asset-item>
-          </a-assets>
+      scene.addEventListener('arReady', () => {
+        debug('AR bereit – richte die Kamera auf das Triggerbild');
+      });
 
-          <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+      scene.addEventListener('arError', () => {
+        debug('AR Fehler – prüfe targets.mind, HTTPS und Kamerazugriff');
+      });
 
-          <!-- Triggerbild Index 0 = erstes Bild in targets.mind -->
-          <a-entity mindar-image-target="targetIndex: 0">
-            <a-entity
-              gltf-model="#pokal"
-              scale="0.15 0.15 0.15"
-              position="0 0.2 0"
-              rotation="0 0 0"
-              animation="property: rotation;
-                         from: 0 0 0;
-                         to: 0 360 0;
-                         loop: true;
-                         dur: 4000;
-                         easing: linear"
-            ></a-entity>
-          </a-entity>
-        </a-scene>
-      `;
-
-      // Scan-Hint ausblenden sobald Marker gefunden
-      setTimeout(() => {
-        const sceneEl = document.querySelector('a-scene');
-        if (sceneEl) {
-          sceneEl.addEventListener('targetFound', () => {
-            document.getElementById('scan-hint').classList.remove('visible');
-          });
-          sceneEl.addEventListener('targetLost', () => {
-            document.getElementById('scan-hint').classList.add('visible');
-          });
-        }
-      }, 2000);
+      if (scene.hasLoaded) {
+        scene.systems['mindar-image-system'].start();
+      } else {
+        scene.addEventListener('loaded', () => {
+          scene.systems['mindar-image-system'].start();
+        }, { once: true });
+      }
     }
 
     function stopAR() {
       window.location.reload();
     }
   </script>
-
 </body>
 </html>
